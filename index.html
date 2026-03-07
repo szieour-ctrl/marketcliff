@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Sale Strategy Spectrum</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+
+/* ============================================================
+   RESET
+============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================================
+   DESIGN TOKENS
+============================================================ */
+:root {
+  --gold:          #C9A84C;
+  --gold-light:    #E8D5A3;
+  --gold-bg:       #FDFBF5;
+  --gold-border:   #E0CEA0;
+  --text-primary:  #1A1A1A;
+  --text-secondary:#666666;
+  --text-muted:    #BFBFBF;
+  --divider:       #ECECEC;
+  --white:         #FFFFFF;
+}
+
+/* ============================================================
+   PAGE SHELL  —  1240 × 1754 px (Placid canvas)
+============================================================ */
+body {
+  background: #EDEBE7;
+  font-family: 'Jost', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.page {
+  width: 1240px;
+  min-height: 1754px;
+  background: var(--white);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 110px 120px 100px;
+}
+
+/* Top gold rule */
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--gold-light) 15%,
+    var(--gold) 50%,
+    var(--gold-light) 85%,
+    transparent 100%
+  );
+}
+
+/* ============================================================
+   INNER COLUMN  —  1000 px wide, centered
+============================================================ */
+.inner {
+  width: 1000px;
+  max-width: 100%;
+}
+
+/* ============================================================
+   HEADER
+============================================================ */
+.header {
+  text-align: center;
+  margin-bottom: 68px;
+}
+
+.eyebrow {
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  font-size: 11px;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+
+.title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 40px;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   CONTINUUM LABEL
+============================================================ */
+.continuum-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.continuum-label {
+  font-family: 'Jost', sans-serif;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.36em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.continuum-label::before,
+.continuum-label::after {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 1px;
+  background: var(--divider);
+}
+
+/* ============================================================
+   AXIS ROW
+============================================================ */
+.axis-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.axis-label {
+  font-family: 'Jost', sans-serif;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.axis-label.right {
+  flex-direction: row-reverse;
+}
+
+.arrow-line {
+  width: 26px;
+  height: 1px;
+  background: var(--divider);
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Arrow pointing right (left-side label) */
+.arrow-line::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -3px;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  border-left: 6px solid var(--divider);
+}
+
+/* Arrow pointing left (right-side label) */
+.axis-label.right .arrow-line::after {
+  right: auto;
+  left: 0;
+  border-left: none;
+  border-right: 6px solid var(--divider);
+}
+
+/* ============================================================
+   SPECTRUM SPINE + NODES
+============================================================ */
+.spectrum-wrap {
+  position: relative;
+  padding-top: 56px; /* vertical room for the floating badge */
+}
+
+.spine {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent    0%,
+    var(--gold-light) 8%,
+    var(--gold)    30%,
+    var(--gold)    70%,
+    var(--gold-light) 92%,
+    transparent    100%
+  );
+  border-radius: 1px;
+  position: relative;
+}
+
+/* Node row — centered on the spine */
+.nodes-row {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(50%);
+}
+
+/* Individual node slot — context for absolute badge */
+.node-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Default node ── */
+.node {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 1.5px solid var(--gold);
+  position: relative;
+  z-index: 3;
+}
+
+/* ── Recommended node ── */
+.node.recommended {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow:
+    0 0 0 5px  rgba(201, 168, 76, 0.20),
+    0 0 0 11px rgba(201, 168, 76, 0.08),
+    0 0 20px   rgba(201, 168, 76, 0.22);
+}
+
+/* ── Floating badge — hidden by default, revealed by JS only ── */
+.rec-badge {
+  display: none;           /* JS sets this to 'flex' */
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.rec-pill {
+  font-family: 'Jost', sans-serif;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--white);
+  border: 1px solid rgba(201, 168, 76, 0.38);
+  padding: 5px 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+}
+
+.rec-stem {
+  width: 1px;
+  height: 9px;
+  background: rgba(201, 168, 76, 0.42);
+}
+
+/* ============================================================
+   STRATEGY CARDS
+============================================================ */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 38px;
+}
+
+.card {
+  padding: 26px 20px 24px;
+  border-left: 1px solid var(--divider);
+}
+
+.card:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+.card:last-child {
+  padding-right: 0;
+}
+
+/* ── Recommended card highlight ── */
+.card.recommended {
+  background: var(--gold-bg);
+  border-left: 1px solid var(--gold-border);
+  border-right: 1px solid var(--gold-border);
+}
+
+.card.recommended:first-child {
+  border-left: 1px solid var(--gold-border);
+  padding-left: 20px;
+}
+
+/* Card elements */
+.card-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 0.07em;
+  margin-bottom: 9px;
+}
+
+.card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 22px;
+  color: var(--text-primary);
+  line-height: 1.15;
+  margin-bottom: 13px;
+}
+
+.card-rule {
+  width: 24px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.38;
+  margin-bottom: 14px;
+}
+
+.card.recommended .card-rule {
+  width: 32px;
+  opacity: 1;
+}
+
+.card-desc {
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.78;
+  color: var(--text-secondary);
+  margin-bottom: 22px;
+  min-height: 72px;
+}
+
+.card.recommended .card-desc {
+  color: #555555;
+}
+
+/* ── Metric bars ── */
+.metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.m-label {
+  font-family: 'Jost', sans-serif;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  width: 58px;
+  flex-shrink: 0;
+}
+
+.m-track {
+  flex: 1;
+  height: 2px;
+  background: #EFEFEF;
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.m-fill {
+  height: 100%;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--gold-light), var(--gold));
+}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+.footer {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--divider);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-note {
+  font-family: 'Jost', sans-serif;
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #CCCCCC;
+  max-width: 500px;
+  line-height: 1.75;
+}
+
+.footer-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--gold);
+  opacity: 0.68;
+  white-space: nowrap;
+  margin-left: 28px;
+}
+
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="inner">
+
+    <!-- ══════════════════════════════════
+         HEADER
+    ══════════════════════════════════ -->
+    <div class="header">
+      <div class="eyebrow">Your Personalized</div>
+      <div class="title">Home Sale Strategy Spectrum</div>
+      <div class="subtitle">Aligning your timeline with market opportunity</div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         CONTINUUM LABEL
+    ══════════════════════════════════ -->
+    <div class="continuum-row">
+      <div class="continuum-label">Strategy Continuum</div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         AXIS LABELS
+    ══════════════════════════════════ -->
+    <div class="axis-row">
+      <div class="axis-label">
+        <div class="arrow-line"></div>
+        Fastest Close
+      </div>
+      <div class="axis-label right">
+        Highest Value
+        <div class="arrow-line"></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         SPECTRUM SPINE + NODES
+    ══════════════════════════════════ -->
+    <div class="spectrum-wrap">
+      <div class="spine"></div>
+
+      <div class="nodes-row">
+
+        <!-- Node 1 · Cash Sale -->
+        <div class="node-slot">
+          <div class="node node-cash" id="node-cash"></div>
+          <div class="rec-badge" id="badge-cash">
+            <div class="rec-pill">Recommended Strategy</div>
+            <div class="rec-stem"></div>
+          </div>
+        </div>
+
+        <!-- Node 2 · As-Is MLS -->
+        <div class="node-slot">
+          <div class="node node-asis" id="node-asis"></div>
+          <div class="rec-badge" id="badge-asis">
+            <div class="rec-pill">Recommended Strategy</div>
+            <div class="rec-stem"></div>
+          </div>
+        </div>
+
+        <!-- Node 3 · Light Repairs -->
+        <div class="node-slot">
+          <div class="node node-light" id="node-light"></div>
+          <div class="rec-badge" id="badge-light">
+            <div class="rec-pill">Recommended Strategy</div>
+            <div class="rec-stem"></div>
+          </div>
+        </div>
+
+        <!-- Node 4 · Full Renovation -->
+        <div class="node-slot">
+          <div class="node node-retail" id="node-retail"></div>
+          <div class="rec-badge" id="badge-retail">
+            <div class="rec-pill">Recommended Strategy</div>
+            <div class="rec-stem"></div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /spectrum-wrap -->
+
+    <!-- ══════════════════════════════════
+         STRATEGY CARDS
+    ══════════════════════════════════ -->
+    <div class="cards">
+
+      <!-- 01 · Cash Sale -->
+      <div class="card" id="card-cash">
+        <div class="card-num">01</div>
+        <div class="card-title">Cash Sale</div>
+        <div class="card-rule"></div>
+        <div class="card-desc">Immediate liquidity with no contingencies. Ideal when speed and certainty outweigh price maximization.</div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="m-label">Speed</div>
+            <div class="m-track"><div class="m-fill" style="width:96%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Net Value</div>
+            <div class="m-track"><div class="m-fill" style="width:38%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Effort</div>
+            <div class="m-track"><div class="m-fill" style="width:12%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 02 · As-Is MLS -->
+      <div class="card" id="card-asis">
+        <div class="card-num">02</div>
+        <div class="card-title">As-Is MLS</div>
+        <div class="card-rule"></div>
+        <div class="card-desc">Broad market exposure without preparation costs. Attracts value-oriented buyers and investors.</div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="m-label">Speed</div>
+            <div class="m-track"><div class="m-fill" style="width:70%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Net Value</div>
+            <div class="m-track"><div class="m-fill" style="width:54%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Effort</div>
+            <div class="m-track"><div class="m-fill" style="width:28%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 · Light Repairs -->
+      <div class="card" id="card-light">
+        <div class="card-num">03</div>
+        <div class="card-title">Light Repairs</div>
+        <div class="card-rule"></div>
+        <div class="card-desc">Targeted cosmetic updates that widen the buyer pool and support higher pricing.</div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="m-label">Speed</div>
+            <div class="m-track"><div class="m-fill" style="width:48%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Net Value</div>
+            <div class="m-track"><div class="m-fill" style="width:74%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Effort</div>
+            <div class="m-track"><div class="m-fill" style="width:52%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 · Full Renovation -->
+      <div class="card" id="card-retail">
+        <div class="card-num">04</div>
+        <div class="card-title">Full Renovation</div>
+        <div class="card-rule"></div>
+        <div class="card-desc">Full repositioning of the home for top-of-market pricing. Often includes major remodeling projects and staging.</div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="m-label">Speed</div>
+            <div class="m-track"><div class="m-fill" style="width:20%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Net Value</div>
+            <div class="m-track"><div class="m-fill" style="width:96%"></div></div>
+          </div>
+          <div class="metric">
+            <div class="m-label">Effort</div>
+            <div class="m-track"><div class="m-fill" style="width:92%"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /cards -->
+
+    <!-- ══════════════════════════════════
+         FOOTER
+    ══════════════════════════════════ -->
+    <div class="footer">
+      <div class="footer-note">
+        Strategy selection depends on timeline, equity position, and current market conditions.
+      </div>
+      <div class="footer-mark">Your Personalized Market-Ready Playbook™</div>
+    </div>
+
+  </div><!-- /inner -->
+</div><!-- /page -->
+
+<!-- ============================================================
+     DYNAMIC RECOMMENDATION ENGINE
+     ─────────────────────────────────────────────────────────
+     Placid injects the value of {{recommended_strategy}}.
+     Falls back to "Light Repairs" if the variable is empty
+     or unresolved.
+
+     Accepted values (case-sensitive):
+       "Cash Sale"
+       "As-Is MLS"
+       "Light Repairs"
+       "Full Renovation"
+============================================================ -->
+<script>
+(function () {
+
+  // ── 1. Resolve the recommended strategy value ──────────────
+  var recommended = "{{recommended_strategy}}";
+
+  // Trim whitespace that may be introduced by Placid template rendering
+  if (recommended) {
+    recommended = recommended.trim();
+  }
+
+  // Fall back to "Light Repairs" if value is empty or not a recognized strategy
+  if (!recommended || !map[recommended]) {
+    recommended = "Light Repairs";
+  }
+
+  // ── 2. Strategy → element ID map ──────────────────────────
+  var map = {
+    "Cash Sale":       { node: "node-cash",   badge: "badge-cash",   card: "card-cash"   },
+    "As-Is MLS":       { node: "node-asis",   badge: "badge-asis",   card: "card-asis"   },
+    "Light Repairs":   { node: "node-light",  badge: "badge-light",  card: "card-light"  },
+    "Full Renovation": { node: "node-retail", badge: "badge-retail", card: "card-retail" }
+  };
+
+  // ── 3. Reset all state (safe baseline) ────────────────────
+  var allNodes  = document.querySelectorAll('.node');
+  var allCards  = document.querySelectorAll('.card');
+  var allBadges = document.querySelectorAll('.rec-badge');
+
+  for (var i = 0; i < allNodes.length;  i++) { allNodes[i].classList.remove('recommended'); }
+  for (var i = 0; i < allCards.length;  i++) { allCards[i].classList.remove('recommended'); }
+  for (var i = 0; i < allBadges.length; i++) { allBadges[i].style.display = 'none'; }
+
+  // ── 4. Apply recommended state ────────────────────────────
+  var target = map[recommended];
+
+  if (target) {
+    var nodeEl  = document.getElementById(target.node);
+    var badgeEl = document.getElementById(target.badge);
+    var cardEl  = document.getElementById(target.card);
+
+    if (nodeEl)  { nodeEl.classList.add('recommended'); }
+    if (badgeEl) { badgeEl.style.display = 'flex'; }
+    if (cardEl)  { cardEl.classList.add('recommended'); }
+  }
+
+}());
+</script>
+</body>
+</html>
