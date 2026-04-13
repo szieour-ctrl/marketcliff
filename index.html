@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Cliff Analysis™ — SZ Real Estate Group</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F4F4F4;color:#222;min-height:100vh}
+.page{max-width:900px;margin:0 auto;padding:0 0 3rem}
+
+/* Header */
+.tool-header{background:#1B3A6B;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.header-left{}
+.tool-name{color:#fff;font-size:22px;font-weight:600;letter-spacing:-.02em}
+.tool-tm{font-size:12px;vertical-align:super;color:#B8962E;font-weight:400}
+.tool-tagline{color:#B8962E;font-size:12px;margin-top:3px;letter-spacing:.03em}
+.header-right{text-align:right}
+.agent-name{color:#fff;font-size:15px;font-weight:600}
+.agent-meta{color:rgba(255,255,255,.65);font-size:11px;margin-top:3px}
+.gold-bar{height:4px;background:#B8962E}
+
+/* Body */
+.body{padding:1.5rem 1.5rem}
+.section-title{font-size:11px;font-weight:600;color:#1B3A6B;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';display:inline-block;width:3px;height:14px;background:#B8962E;border-radius:2px}
+.card{background:#fff;border:1px solid #DDD;border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1rem}
+
+/* Subject grid */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.sg:last-child{margin-bottom:0}
+.field label{display:block;font-size:11px;color:#666;margin-bottom:4px;font-weight:500}
+.field input,.field select{width:100%;padding:8px 10px;font-size:14px;border:1px solid #CCC;border-radius:6px;background:#fff;color:#222;transition:border-color .15s}
+.field input:focus,.field select:focus{outline:none;border-color:#1B3A6B;box-shadow:0 0 0 3px rgba(27,58,107,.1)}
+
+/* Upload zone */
+.upload-zone{border:2px dashed #B8962E;border-radius:8px;padding:1.5rem;text-align:center;cursor:pointer;transition:background .15s;background:#FDFAF4;margin-bottom:.75rem}
+.upload-zone:hover,.upload-zone.drag{background:#FDF6E3}
+.upload-zone.has-file{background:#E8EDF5;border-color:#1B3A6B;border-style:solid}
+.upload-icon{font-size:28px;margin-bottom:8px;color:#B8962E}
+.upload-title{font-size:14px;font-weight:500;color:#1B3A6B;margin-bottom:4px}
+.upload-sub{font-size:12px;color:#888}
+.upload-file-name{font-size:13px;font-weight:500;color:#1B3A6B;margin-top:6px}
+#pdfInput{display:none}
+
+.extract-btn{width:100%;background:#B8962E;color:#fff;border:none;padding:10px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;letter-spacing:.01em}
+.extract-btn:hover:not(:disabled){background:#9a7a24}
+.extract-btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* Comp table */
+.comp-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:680px}
+thead th{font-size:10px;font-weight:600;color:#1B3A6B;text-align:left;padding:8px 8px;border-bottom:2px solid #B8962E;background:#E8EDF5;white-space:nowrap}
+tbody td{padding:6px 8px;border-bottom:1px solid #EEE;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#FAFAFA}
+tbody td input,tbody td select{padding:5px 6px;font-size:12px;border:1px solid #DDD;border-radius:5px;background:#fff;color:#222;width:100%}
+tbody td input:focus,tbody td select:focus{outline:none;border-color:#1B3A6B}
+.psf-cell{font-size:12px;color:#888;white-space:nowrap}
+.del-btn{background:none;border:none;color:#CCC;cursor:pointer;font-size:18px;padding:0 4px;line-height:1;transition:color .1s}
+.del-btn:hover{color:#A32D2D}
+.add-row-btn{font-size:13px;color:#1B3A6B;background:none;border:none;cursor:pointer;padding:8px 0;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.add-row-btn:hover{color:#B8962E}
+
+/* Status pills in table */
+select.st-sold{color:#1A6B3A}
+select.st-active{color:#1B3A6B}
+select.st-pending{color:#854F0B}
+
+/* Analyze button */
+.analyze-btn{width:100%;background:#1B3A6B;color:#fff;border:none;padding:13px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:.5rem;letter-spacing:.01em;transition:background .15s}
+.analyze-btn:hover:not(:disabled){background:#152e56}
+.analyze-btn:disabled{opacity:.55;cursor:not-allowed}
+
+/* Loading */
+.loading{display:none;text-align:center;padding:1.5rem;color:#1B3A6B;font-size:14px}
+.spinner{width:32px;height:32px;border:3px solid #E8EDF5;border-top-color:#1B3A6B;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Results */
+.results{display:none;margin-top:1rem}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem}
+.metric{background:#E8EDF5;border-radius:8px;padding:1rem;border-left:3px solid #1B3A6B}
+.metric-label{font-size:10px;color:#1B3A6B;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.metric-value{font-size:20px;font-weight:600;color:#1B3A6B}
+.metric-sub{font-size:10px;color:#888;margin-top:3px}
+.rec-band{background:#1B3A6B;border-radius:8px;padding:16px 20px;margin-bottom:1rem}
+.rec-label{font-size:10px;font-weight:600;color:#B8962E;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.rec-range{font-size:28px;font-weight:600;color:#fff}
+.rec-note{font-size:12px;color:rgba(255,255,255,.7);margin-top:6px;line-height:1.5}
+.chart-wrap{position:relative;height:260px;width:100%;margin-bottom:1rem}
+.cliff-legend{display:flex;gap:16px;font-size:11px;color:#666;margin-bottom:8px}
+.legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px}
+.cliffs-list{margin-top:8px}
+.cliff-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #EEE;font-size:13px}
+.cliff-item:last-child{border-bottom:none}
+.cliff-price{font-weight:600;color:#1B3A6B}
+.cliff-desc{font-size:12px;color:#888;margin-left:8px}
+.cliff-badge{font-size:10px;padding:3px 9px;border-radius:6px;font-weight:600}
+.badge-high{background:#FCEBEB;color:#A32D2D}
+.badge-med{background:#FAEEDA;color:#854F0B}
+.badge-low{background:#EAF3DE;color:#3B6D11}
+.tp-wrap{}
+.tp-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #EEE;font-size:13px;line-height:1.6;color:#333}
+.tp-item:last-child{border-bottom:none}
+.tp-num{color:#B8962E;font-weight:700;min-width:20px;padding-top:1px}
+.disclaimer{margin-top:1rem;padding:1rem;background:#F8F8F8;border-radius:8px;font-size:11px;color:#888;line-height:1.6;border:1px solid #EEE}
+
+/* Export button */
+.export-bar{display:flex;justify-content:flex-end;margin-bottom:1rem}
+.export-btn{background:#B8962E;color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.export-btn:hover{background:#9a7a24}
+
+/* Error */
+.error-msg{background:#FCEBEB;border:1px solid #F09595;border-radius:8px;padding:12px 16px;font-size:13px;color:#A32D2D;margin-bottom:1rem;display:none}
+
+/* Print */
+@media print{
+  body{background:#fff}
+  .no-print{display:none!important}
+  .card{break-inside:avoid;border:1px solid #CCC;box-shadow:none}
+  .tool-header,.gold-bar,.rec-band,.metric,.comp-table thead{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{max-width:100%;padding:0}
+  .body{padding:.75rem}
+  .print-footer{display:flex!important}
+}
+.print-footer{display:none;justify-content:space-between;font-size:11px;color:#888;padding-top:12px;border-top:2px solid #B8962E;margin-top:1rem}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="tool-header">
+    <div class="header-left">
+      <div class="tool-name">Market Cliff Analysis<span class="tool-tm">™</span></div>
+      <div class="tool-tagline">SZ Real Estate Group &nbsp;·&nbsp; Powered by Sam Zieour</div>
+    </div>
+    <div class="header-right">
+      <div class="agent-name">Sam Zieour, Realtor</div>
+      <div class="agent-meta">55+ Active Adult Specialist &nbsp;·&nbsp; DRE #01397303 &nbsp;·&nbsp; 916-300-6292</div>
+    </div>
+  </div>
+  <div class="gold-bar"></div>
+
+  <div class="body">
+
+    <!-- Subject Property -->
+    <div class="card">
+      <div class="section-title">Subject property</div>
+      <div class="sg">
+        <div class="field"><label>Property address</label><input type="text" id="subAddress" placeholder="123 Main St, Roseville CA"></div>
+        <div class="field"><label>Square footage</label><input type="number" id="subSqft" placeholder="1,800"></div>
+        <div class="field"><label>Community / area</label><input type="text" id="subCommunity" placeholder="e.g. Sun City Roseville"></div>
+      </div>
+      <div class="sg">
+        <div class="field"><label>Beds / Baths</label><input type="text" id="subBeds" placeholder="3 / 2"></div>
+        <div class="field"><label>Year built</label><input type="number" id="subYear" placeholder="2005"></div>
+        <div class="field"><label>Property type</label>
+          <select id="subType">
+            <option value="55+">55+ active adult community</option>
+            <option value="standard">Standard residential resale</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- CMA Upload -->
+    <div class="card no-print">
+      <div class="section-title">Upload CMA PDF</div>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('pdfInput').click()">
+        <div class="upload-icon">&#128196;</div>
+        <div class="upload-title">Click to upload your Matrix CMA PDF</div>
+        <div class="upload-sub">Claude will extract comp data and populate the grid automatically</div>
+        <div class="upload-file-name" id="fileName"></div>
+      </div>
+      <input type="file" id="pdfInput" accept=".pdf">
+      <button class="extract-btn" id="extractBtn" onclick="extractComps()" disabled>Extract comps from PDF</button>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>Extracting comparable sales from your CMA...</div>
+    </div>
+
+    <!-- Comp Grid -->
+    <div class="card">
+      <div class="section-title">Comparable sales</div>
+      <div class="comp-wrap">
+        <table id="compTable">
+          <thead>
+            <tr>
+              <th style="width:26%">Address</th>
+              <th style="width:8%">Sqft</th>
+              <th style="width:11%">List price</th>
+              <th style="width:11%">Sold price</th>
+              <th style="width:7%">DOM</th>
+              <th style="width:10%">Status</th>
+              <th style="width:10%">$/sqft</th>
+              <th style="width:4%" class="no-print"></th>
+            </tr>
+          </thead>
+          <tbody id="compBody"></tbody>
+        </table>
+      </div>
+      <button class="add-row-btn no-print" onclick="addRow()">+ Add row</button>
+    </div>
+
+    <button class="analyze-btn" onclick="analyze()">Run Market Cliff Analysis</button>
+
+    <!-- Results -->
+    <div class="results" id="results">
+
+      <div style="height:1rem"></div>
+
+      <div class="export-bar no-print">
+        <button class="export-btn" onclick="window.print()">Export PDF</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Market summary</div>
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Sold range</div><div class="metric-value" id="mRange">—</div><div class="metric-sub">low to high</div></div>
+          <div class="metric"><div class="metric-label">Median sold</div><div class="metric-value" id="mMedian">—</div><div class="metric-sub">sold comps</div></div>
+          <div class="metric"><div class="metric-label">Avg $/sqft</div><div class="metric-value" id="mPsf">—</div><div class="metric-sub">sold comps</div></div>
+          <div class="metric"><div class="metric-label">List-to-sale</div><div class="metric-value" id="mLts">—</div><div class="metric-sub">avg ratio</div></div>
+        </div>
+        <div class="rec-band">
+          <div class="rec-label">Recommended list price range</div>
+          <div class="rec-range" id="recRange">—</div>
+          <div class="rec-note" id="recNote"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Price distribution &amp; cliff points</div>
+        <div class="cliff-legend">
+          <span><span class="legend-dot" style="background:#1B3A6B"></span>Comps in tier</span>
+          <span><span class="legend-dot" style="background:#A32D2D"></span>Cliff point — buyer pool narrows</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="cliffChart" role="img" aria-label="Bar chart showing comparable property count per $25K price tier with cliff points in red">Chart loading...</canvas>
+        </div>
+        <div class="cliffs-list" id="cliffsList"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Seller talking points</div>
+        <div class="tp-wrap" id="talkingPoints"></div>
+      </div>
+
+      <div class="disclaimer">
+        This Market Cliff Analysis™ is based on comparable sales data entered above and is intended as a strategic pricing tool, not an appraisal. List price is a professional judgment made by Sam Zieour, Realtor, based on market knowledge, property condition, and seller objectives. All comparable data should be verified in MetroList Matrix MLS before use in a listing presentation. &nbsp;·&nbsp; SZ Real Estate Group &nbsp;·&nbsp; DRE #01397303 &nbsp;·&nbsp; szieour@gmail.com &nbsp;·&nbsp; 916-300-6292
+      </div>
+
+      <div class="print-footer">
+        <span>Market Cliff Analysis™ &nbsp;·&nbsp; SZ Real Estate Group</span>
+        <span>Sam Zieour, Realtor &nbsp;·&nbsp; DRE #01397303 &nbsp;·&nbsp; 916-300-6292</span>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+let chartInst = null;
+let rowCount = 0;
+
+const fmt = n => '$' + Math.round(n).toLocaleString();
+const fmtK = n => '$' + Math.round(n / 1000) + 'K';
+
+// PDF upload
+const pdfInput = document.getElementById('pdfInput');
+const uploadZone = document.getElementById('uploadZone');
+const extractBtn = document.getElementById('extractBtn');
+const fileNameEl = document.getElementById('fileName');
+
+pdfInput.addEventListener('change', () => {
+  if (pdfInput.files[0]) {
+    fileNameEl.textContent = pdfInput.files[0].name;
+    uploadZone.classList.add('has-file');
+    extractBtn.disabled = false;
+  }
+});
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') {
+    pdfInput.files = e.dataTransfer.files;
+    fileNameEl.textContent = file.name;
+    uploadZone.classList.add('has-file');
+    extractBtn.disabled = false;
+  }
+});
+
+async function extractComps() {
+  const file = pdfInput.files[0];
+  if (!file) return;
+
+  setLoading(true);
+  showError('');
+
+  try {
+    const base64 = await fileToBase64(file);
+
+    const response = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: `You are a real estate data extraction assistant. Extract comparable sales data from the uploaded CMA PDF. Return ONLY a valid JSON array with no preamble, no markdown, no backticks. Each object must have these exact keys: addr (string), sqft (number or 0 if unknown), list (number or 0), sold (number or 0), dom (number or 0), status (string: "sold", "active", or "pending"). Extract every comparable property visible in the document. If a field is not available set it to 0 or empty string.`,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'document',
+              source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+            },
+            {
+              type: 'text',
+              text: 'Extract all comparable sales from this CMA PDF and return them as a JSON array only.'
+            }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error);
+
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const comps = JSON.parse(clean);
+
+    if (!Array.isArray(comps) || comps.length === 0) throw new Error('No comps found in PDF.');
+
+    document.getElementById('compBody').innerHTML = '';
+    rowCount = 0;
+    comps.forEach(c => addRow(c.addr || '', c.sqft || '', c.list || '', c.sold || '', c.dom || '', c.status || 'sold'));
+
+  } catch (err) {
+    showError('Could not extract comps: ' + err.message + '. Please check your PDF or add comps manually.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function setLoading(show) {
+  document.getElementById('loading').style.display = show ? 'block' : 'none';
+  extractBtn.disabled = show;
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.style.display = msg ? 'block' : 'none';
+  el.textContent = msg;
+}
+
+// Comp grid
+function addRow(addr = '', sqft = '', list = '', sold = '', dom = '', status = 'sold') {
+  rowCount++;
+  const rid = 'row' + rowCount;
+  const pid = 'psf' + rowCount;
+  const tr = document.createElement('tr');
+  tr.id = rid;
+  tr.innerHTML = `
+    <td><input type="text" value="${addr}" placeholder="Street address"></td>
+    <td><input type="number" class="sq" value="${sqft || ''}" placeholder="sqft"></td>
+    <td><input type="number" class="lp" value="${list || ''}" placeholder="$"></td>
+    <td><input type="number" class="sp" value="${sold || ''}" placeholder="$"></td>
+    <td><input type="number" class="dm" value="${dom || ''}" placeholder="#"></td>
+    <td>
+      <select class="st">
+        <option value="sold"${status === 'sold' ? ' selected' : ''}>Sold</option>
+        <option value="active"${status === 'active' ? ' selected' : ''}>Active</option>
+        <option value="pending"${status === 'pending' ? ' selected' : ''}>Pending</option>
+      </select>
+    </td>
+    <td class="psf-cell" id="${pid}">—</td>
+    <td class="no-print"><button class="del-btn" onclick="document.getElementById('${rid}').remove()" title="Remove">×</button></td>
+  `;
+  document.getElementById('compBody').appendChild(tr);
+
+  function recalc() {
+    const s = parseFloat(tr.querySelector('.sq').value) || 0;
+    const sp = parseFloat(tr.querySelector('.sp').value) || 0;
+    document.getElementById(pid).textContent = (s && sp) ? '$' + Math.round(sp / s) + '/sf' : '—';
+  }
+  tr.querySelector('.sq').addEventListener('input', recalc);
+  tr.querySelector('.sp').addEventListener('input', recalc);
+  if (sqft && sold) recalc();
+}
+
+function getRows() {
+  return [...document.querySelectorAll('#compBody tr')].map(tr => ({
+    addr: tr.querySelector('input[type=text]')?.value || '',
+    sqft: parseFloat(tr.querySelector('.sq')?.value) || 0,
+    list: parseFloat(tr.querySelector('.lp')?.value) || 0,
+    sold: parseFloat(tr.querySelector('.sp')?.value) || 0,
+    dom: parseFloat(tr.querySelector('.dm')?.value) || 0,
+    status: tr.querySelector('.st')?.value || 'sold'
+  })).filter(r => r.list > 0 || r.sold > 0);
+}
+
+// Analysis
+function analyze() {
+  const rows = getRows();
+  if (rows.length < 3) { alert('Please enter at least 3 comps.'); return; }
+  const soldRows = rows.filter(r => r.status === 'sold' && r.sold > 0);
+  if (soldRows.length < 2) { alert('Please enter at least 2 sold comps.'); return; }
+
+  const sortedSold = [...soldRows.map(r => r.sold)].sort((a, b) => a - b);
+  const minP = sortedSold[0];
+  const maxP = sortedSold[sortedSold.length - 1];
+  const medP = sortedSold[Math.floor(sortedSold.length / 2)];
+  const psfRows = soldRows.filter(r => r.sqft > 0);
+  const avgPsf = psfRows.length ? psfRows.reduce((s, r) => s + r.sold / r.sqft, 0) / psfRows.length : 0;
+  const ltsRows = soldRows.filter(r => r.list > 0);
+  const avgLts = ltsRows.length ? ltsRows.reduce((s, r) => s + (r.sold / r.list * 100), 0) / ltsRows.length : 98;
+
+  document.getElementById('mRange').textContent = fmtK(minP) + ' – ' + fmtK(maxP);
+  document.getElementById('mMedian').textContent = fmt(medP);
+  document.getElementById('mPsf').textContent = avgPsf ? '$' + Math.round(avgPsf) + '/sf' : '—';
+  document.getElementById('mLts').textContent = avgLts.toFixed(1) + '%';
+
+  // Tier buckets $25K
+  const step = 25000;
+  const floorP = Math.floor(minP / step) * step;
+  const ceilP = Math.ceil(maxP / step) * step + step;
+  const tiers = [];
+  for (let p = floorP; p < ceilP; p += step) tiers.push(p);
+
+  const counts = tiers.map(t => ({ price: t, n: 0 }));
+  rows.forEach(r => {
+    const p = r.status === 'sold' ? r.sold : r.list;
+    if (!p) return;
+    const i = Math.max(0, Math.min(counts.length - 1, Math.floor((p - floorP) / step)));
+    counts[i].n++;
+  });
+
+  // Find cliffs
+  const cliffs = [];
+  for (let i = 1; i < counts.length; i++) {
+    const drop = counts[i - 1].n - counts[i].n;
+    if (counts[i - 1].n > 0 && drop >= 1) {
+      cliffs.push({ price: counts[i].price, drop, severity: drop >= 3 ? 'high' : drop >= 2 ? 'medium' : 'low' });
+    }
+  }
+
+  // Recommended range
+  const subSqft = parseFloat(document.getElementById('subSqft').value) || 0;
+  let recLow, recHigh, recNote;
+  if (subSqft > 0 && avgPsf > 0) {
+    const est = subSqft * avgPsf * (avgLts / 100);
+    recLow = Math.round((est * 0.98) / 5000) * 5000;
+    recHigh = Math.round((est * 1.02) / 5000) * 5000;
+    recNote = 'Based on $' + Math.round(avgPsf) + '/sqft avg × ' + subSqft.toLocaleString() + ' sqft, adjusted to ' + avgLts.toFixed(1) + '% list-to-sale ratio.';
+  } else {
+    recLow = Math.round((medP * 0.97) / 5000) * 5000;
+    recHigh = Math.round((medP * 1.01) / 5000) * 5000;
+    recNote = 'Based on median sold price. Enter subject square footage for a $/sqft-adjusted estimate.';
+  }
+  const cliffAbove = cliffs.find(c => c.price > recHigh && (c.severity === 'high' || c.severity === 'medium'));
+  if (cliffAbove) {
+    recHigh = Math.min(recHigh, cliffAbove.price - 1000);
+    recNote += ' Capped below the ' + fmtK(cliffAbove.price) + ' cliff to maximize buyer pool exposure.';
+  }
+  if (recLow > recHigh) recLow = recHigh - 10000;
+
+  document.getElementById('recRange').textContent = fmt(recLow) + ' – ' + fmt(recHigh);
+  document.getElementById('recNote').textContent = recNote;
+
+  // Chart
+  if (chartInst) chartInst.destroy();
+  const barColors = counts.map(t => cliffs.some(c => c.price === t.price) ? '#A32D2D' : '#1B3A6B');
+  chartInst = new Chart(document.getElementById('cliffChart'), {
+    type: 'bar',
+    data: {
+      labels: counts.map(t => fmtK(t.price)),
+      datasets: [{ label: 'Comps', data: counts.map(t => t.n), backgroundColor: barColors, borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { title: ctx => fmtK(counts[ctx[0].dataIndex].price) + ' tier', label: ctx => ctx.raw + ' comp' + (ctx.raw !== 1 ? 's' : '') } }
+      },
+      scales: {
+        x: { ticks: { autoSkip: false, maxRotation: 45, font: { size: 11 }, color: '#1B3A6B' }, grid: { display: false }, border: { color: '#DDD' } },
+        y: { ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.05)' }, border: { display: false } }
+      }
+    }
+  });
+
+  // Cliff list
+  const cl = document.getElementById('cliffsList');
+  cl.innerHTML = '<div style="font-size:10px;font-weight:600;color:#1B3A6B;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Identified cliff points</div>';
+  if (!cliffs.length) {
+    cl.innerHTML += '<div style="font-size:13px;color:#888;padding:8px 0">No significant cliffs detected — pricing is relatively even across the comp range.</div>';
+  } else {
+    cliffs.forEach(c => {
+      const bc = c.severity === 'high' ? 'badge-high' : c.severity === 'medium' ? 'badge-med' : 'badge-low';
+      const bt = c.severity === 'high' ? 'Major cliff' : c.severity === 'medium' ? 'Moderate cliff' : 'Minor cliff';
+      cl.innerHTML += `<div class="cliff-item"><div><span class="cliff-price">${fmt(c.price)}</span><span class="cliff-desc">buyer pool narrows at this threshold</span></div><span class="cliff-badge ${bc}">${bt}</span></div>`;
+    });
+  }
+
+  // Talking points
+  const is55 = document.getElementById('subType').value === '55+';
+  const community = document.getElementById('subCommunity').value || 'this market';
+  const pts = [];
+  pts.push(`The comparable sales data shows ${soldRows.length} ${is55 ? 'active adult ' : ''}home${soldRows.length !== 1 ? 's' : ''} sold in ${community} ranging from ${fmt(minP)} to ${fmt(maxP)}, with a median sale price of ${fmt(medP)}.`);
+  if (cliffs.length) {
+    const top = cliffs.find(c => c.severity === 'high') || cliffs[0];
+    pts.push(`There is a clear buyer search threshold at ${fmt(top.price)}. Homes priced above this point fall outside the active search range of a significant portion of qualified buyers — which typically means fewer showings, longer days on market, and a higher probability of a price reduction.`);
+    pts.push(`Positioning below ${fmt(top.price)} places your home in front of every buyer searching up to that threshold. Broader exposure creates competition — and competition drives the best outcome for you as a seller.`);
+  } else {
+    pts.push(`The data shows relatively even activity across the price range. Positioning at or slightly below the median of ${fmt(medP)} gives your home strong visibility without undervaluing it.`);
+  }
+  if (avgLts > 0) pts.push(`The average list-to-sale ratio for comparable homes is ${avgLts.toFixed(1)}%. Homes priced correctly from the start are selling close to — ${avgLts >= 99 ? 'and sometimes above — ' : ''}asking price. Overpricing typically results in a larger eventual reduction, which signals weakness and invites lower offers.`);
+  if (avgPsf > 0 && subSqft > 0) pts.push(`At the market average of $${Math.round(avgPsf)} per square foot, your ${subSqft.toLocaleString()} sqft home supports a value around ${fmt(subSqft * avgPsf)}. Our recommended range of ${fmt(recLow)} to ${fmt(recHigh)} is calibrated to maximize buyer exposure while positioning competitively within the active market.`);
+  pts.push(`The goal is not to set the lowest price — it is to set the right price. The right price attracts the right buyers, generates the strongest offers, and puts you in the best possible negotiating position from day one.`);
+
+  document.getElementById('talkingPoints').innerHTML = pts.map((p, i) => `<div class="tp-item"><span class="tp-num">${i + 1}.</span><span>${p}</span></div>`).join('');
+
+  document.getElementById('results').style.display = 'block';
+  setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+</script>
+</body>
+</html>
